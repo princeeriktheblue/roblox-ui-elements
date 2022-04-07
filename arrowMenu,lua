@@ -1,0 +1,110 @@
+local ArrowMenu = {}
+ArrowMenu.__index = ArrowMenu
+
+function ArrowMenu.new(parent : Instance, MenuText : string, defaultValue, valueList, currentValue, onChangeFunction)
+	local raw = {}
+	
+	raw.OnChangeFunction 	= onChangeFunction
+	raw.CurrentValue 		= defaultValue
+	if currentValue and valueList[currentValue] then
+		raw.CurrentValue 	= currentValue
+	end
+	raw.MenuText			= MenuText
+	raw.Parent 				= parent
+	raw.DefaultValue 		= defaultValue
+	raw.ValueList 			= valueList
+	
+	print(raw.DefaultValue)
+	print(raw.CurrentValue)
+	
+	setmetatable(raw, ArrowMenu)
+	raw:Build()
+	
+	return raw
+end
+
+function ArrowMenu:Build()
+	local RootFrame = Instance.new("Frame")
+	RootFrame.BackgroundColor3 = Color3.fromHSV(0,0,1)
+	RootFrame.BackgroundTransparency = 1
+	RootFrame.Size = UDim2.new(1,0,0,60)
+	RootFrame.ZIndex = 2
+	self.RootFrame = RootFrame
+	
+	local ValueFrame = Instance.new("Frame")
+	ValueFrame.BackgroundColor3 = Color3.fromHSV(0,0,1)
+	ValueFrame.Size = UDim2.new(1,0,1,0)
+	ValueFrame.Style = Enum.FrameStyle.DropShadow
+	ValueFrame.ZIndex = 2
+	ValueFrame.Parent = RootFrame
+	
+	local Decrease = Instance.new("TextButton")
+	Decrease.BackgroundColor3 = Color3.fromHSV(0,0,1)
+	Decrease.BackgroundTransparency = 1
+	Decrease.Size = UDim2.new(0.1,0,1,0)
+	Decrease.Text = "<"
+	Decrease.TextColor3 = Color3.fromHSV(0,0,1)
+	Decrease.TextScaled = true
+	Decrease.ZIndex = 2
+	Decrease.Parent = ValueFrame
+	
+	local Increase = Instance.new("TextButton")
+	Increase.BackgroundColor3 = Color3.fromHSV(0,0,1)
+	Increase.BackgroundTransparency = 1
+	Increase.Position = UDim2.new(0.9,0,0,0)
+	Increase.Size = UDim2.new(0.1,0,1,0)
+	Increase.Text = ">"
+	Increase.TextColor3 = Color3.fromHSV(0,0,1)
+	Increase.TextScaled = true
+	Increase.ZIndex = 2
+	Increase.Parent = ValueFrame
+	
+	local SelectedValue = Instance.new("TextLabel")
+	SelectedValue.BackgroundColor3 = Color3.fromHSV(0,0,1)
+	SelectedValue.BackgroundTransparency = 1
+	SelectedValue.Position = UDim2.new(0.1,0,0,0)
+	SelectedValue.Size = UDim2.new(0.8,0,1,0)
+	SelectedValue.Text = ""
+	SelectedValue.TextColor3 = Color3.fromHSV(0,0,1)
+	SelectedValue.TextScaled = true
+	SelectedValue.ZIndex = 2
+	SelectedValue.Parent = ValueFrame
+	
+	RootFrame.Parent = self.Parent
+	
+	local function updateInfo()
+		SelectedValue.Text = self.ValueList[self.CurrentValue]
+		self.OnChangeFunction(self.ValueList[self.CurrentValue])
+	end
+	
+	self.IncreaseConnection = Increase.MouseButton1Click:Connect(function()
+		if self.CurrentValue < #self.ValueList then
+			self.CurrentValue = self.CurrentValue + 1
+			updateInfo()
+		end
+	end)
+	
+	self.DecreaseConnection = Decrease.MouseButton1Click:Connect(function()
+		if self.CurrentValue > 1 then
+			self.CurrentValue = self.CurrentValue - 1
+			updateInfo()
+		end
+	end)
+	
+	updateInfo()
+	RootFrame.Visible = true
+end
+
+function ArrowMenu:Destroy()
+	if self.IncreaseConnection then
+		self.IncreaseConnection:Disconnect()
+	end
+	if self.DecreaseConnection then
+		self.DecreaseConnection:Disconnect()
+	end
+	if self.RootFrame then
+		self.RootFrame:Destroy()
+	end
+end
+
+return ArrowMenu
